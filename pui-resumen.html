@@ -1,0 +1,217 @@
+<title>Integración PUI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: memo ejecutivo de una columna (~70ch) con tablas y una línea de tiempo; secuencia del flujo como lista numerada real */
+:root {
+  --bg: #f6f8f8;
+  --surface: #ffffff;
+  --ink: #142326;
+  --muted: #55686c;
+  --line: #d6e0e1;
+  --accent: #0f6b6e;
+  --accent-soft: #e0efef;
+  --ok: #2f7a3e;
+  --ok-soft: #e3f1e6;
+  --warn: #9a5b00;
+  --warn-soft: #fbefdc;
+  --display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --body: "Public Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1617; --surface: #152022; --ink: #e3ecec; --muted: #93a7aa; --line: #26363a;
+    --accent: #5cc3c4; --accent-soft: #173335; --ok: #7cc98b; --ok-soft: #17301d;
+    --warn: #e6ae5c; --warn-soft: #34270f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1617; --surface: #152022; --ink: #e3ecec; --muted: #93a7aa; --line: #26363a;
+  --accent: #5cc3c4; --accent-soft: #173335; --ok: #7cc98b; --ok-soft: #17301d;
+  --warn: #e6ae5c; --warn-soft: #34270f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; padding-inline: 16px; padding-block: 40px 64px; }
+.wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+h1, h2 { font-family: var(--display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.6rem); }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1rem; margin: 0; font-weight: 700; }
+p { margin: 0; }
+section { display: flex; flex-direction: column; gap: 16px; }
+.eyebrow { font-family: var(--mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.lede { font-size: 1.15rem; color: var(--ink); max-width: 65ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+header { display: flex; flex-direction: column; gap: 16px; border-bottom: 1px solid var(--line); padding-bottom: 32px; }
+.key { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 16px 20px; border-radius: 0 6px 6px 0; }
+.key strong { color: var(--accent); }
+code { font-family: var(--mono); font-size: .86em; background: var(--accent-soft); color: var(--ink); padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere; }
+
+ol.flow { list-style: none; margin: 0; padding: 0; counter-reset: paso; display: flex; flex-direction: column; }
+ol.flow li { counter-increment: paso; display: grid; grid-template-columns: 40px 1fr; gap: 0 14px; position: relative; padding-bottom: 20px; }
+ol.flow li::before { content: counter(paso); width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--accent); color: var(--accent); font-family: var(--mono); font-weight: 500; display: grid; place-items: center; background: var(--bg); position: relative; z-index: 1; }
+ol.flow li:not(:last-child)::after { content: ""; position: absolute; left: 16px; top: 32px; bottom: 0; width: 1.5px; background: var(--line); }
+ol.flow li > div { min-width: 0; padding-top: 4px; display: flex; flex-direction: column; gap: 4px; }
+.who { font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.who.you { color: var(--accent); }
+
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-family: var(--mono); font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--bg); }
+td.n { font-family: var(--mono); color: var(--accent); white-space: nowrap; }
+
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.col { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.col ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: .92rem; }
+.col .tag { font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+.col.hard { border-color: var(--warn); }
+.col.hard .tag { color: var(--warn); }
+
+.gantt { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 18px; }
+.g-row { display: grid; grid-template-columns: minmax(0, 210px) 1fr; gap: 14px; align-items: center; font-size: .9rem; }
+.g-track { position: relative; height: 22px; background: var(--bg); border-radius: 3px; }
+.g-bar { position: absolute; top: 0; bottom: 0; background: var(--accent); border-radius: 3px; opacity: .85; }
+.g-bar.warn { background: var(--warn); }
+.g-axis { display: grid; grid-template-columns: minmax(0, 210px) 1fr; gap: 14px; }
+.g-ticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { font-size: .85rem; color: var(--muted); }
+
+.status { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.status li { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: baseline; font-size: .94rem; }
+.chip { font-family: var(--mono); font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; text-align: center; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.todo { background: var(--warn-soft); color: var(--warn); }
+.chip.ask { background: var(--accent-soft); color: var(--accent); }
+
+footer { font-size: .8rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 20px; }
+
+@media (max-width: 720px) {
+  .cols { grid-template-columns: 1fr; }
+  .g-row, .g-axis { grid-template-columns: 1fr; gap: 4px; }
+  .g-axis > span { display: none; }
+  .status li { grid-template-columns: 1fr; gap: 4px; }
+  .status .chip { justify-self: start; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Resumen ejecutivo · Cumplimiento regulatorio</span>
+    <h1>Integración con la Plataforma Única de Identidad</h1>
+    <p class="lede">La PUI cruza cada reporte de persona desaparecida contra los registros de empresas e instituciones para encontrar señales de vida posteriores a la desaparición. Integrarse implica construir y operar un servicio propio, conectado 24/7 con la PUI.</p>
+    <div class="meta">
+      <span>Fuente: Manual Técnico, DOF 23/01/2026</span>
+      <span>Versión 1.0</span>
+      <span>Emite: RENAPO · SEGOB</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Cómo funciona</h2>
+    <p class="key"><strong>La PUI no consulta tu base de datos.</strong> Te envía el caso (folio y CURP), tú buscas con tu propia lógica y sólo le reportas lo que encuentres. Fotos y huellas siguen bajo tu custodia.</p>
+    <ol class="flow">
+      <li><div><span class="who">Comisión de Búsqueda</span><h3>Registra el caso</h3><p>La persona entra al Registro Nacional (RNPDNO) y el caso pasa automáticamente a la PUI.</p></div></li>
+      <li><div><span class="who">PUI</span><h3>Te avisa</h3><p>Llama a tu <code>/activar-reporte</code> con un identificador único, la CURP y los datos que tenga.</p></div></li>
+      <li><div><span class="who you">Tu institución</span><h3>Busca en tres fases y reporta</h3><p>Cada hallazgo se envía con <code>/notificar-coincidencia</code>. Al cerrar la búsqueda histórica avisas con <code>/busqueda-finalizada</code>.</p></div></li>
+      <li><div><span class="who">PUI</span><h3>Valida y entrega a la Comisión</h3><p>Los hallazgos llegan de forma automática a las autoridades de búsqueda.</p></div></li>
+      <li><div><span class="who">PUI</span><h3>Cierra el caso</h3><p>Cuando la persona es localizada, llama a tu <code>/desactivar-reporte</code> y detienes todo el monitoreo.</p></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Las tres fases de búsqueda</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Fase</th><th>Qué buscas</th><th>Qué envías</th></tr></thead>
+        <tbody>
+          <tr><td class="n">1 · Datos</td><td>Los datos más recientes de la persona: domicilio, teléfono, correo, fotos, huellas.</td><td>Un solo reporte, o nada si no tienes registro.</td></tr>
+          <tr><td class="n">2 · Histórica</td><td>Operaciones desde la fecha de desaparición hasta hoy, con un máximo de 12 años.</td><td>Un reporte por evento (tipo, fecha, lugar) y luego el aviso de fin.</td></tr>
+          <tr><td class="n">3 · Continua</td><td>Registros nuevos o modificados, cada hora, cada 4 horas o una vez al día.</td><td>Un reporte por evento, hasta que el caso se desactive.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Ejemplos de evento en una financiera: solicitud o desembolso de crédito, pago en sucursal, actualización de domicilio o teléfono, firma de contrato.</p>
+  </section>
+
+  <section>
+    <h2>Qué implica integrarse</h2>
+    <div class="cols">
+      <div class="col">
+        <span class="tag">Trámite</span>
+        <h3>Alta en Llave MX</h3>
+        <ul>
+          <li>Perfil de persona moral, gestionado por el representante legal</li>
+          <li>e.firma vigente de la empresa</li>
+          <li>El RFC con homoclave funciona como identificador</li>
+          <li>Si la e.firma vence, te pueden revocar el acceso</li>
+        </ul>
+      </div>
+      <div class="col">
+        <span class="tag">Desarrollo</span>
+        <h3>Servicio propio 24/7</h3>
+        <ul>
+          <li>Exponer 4 endpoints y consumir otros 4</li>
+          <li>Base local de casos y hallazgos</li>
+          <li>Motor de búsqueda continua</li>
+          <li>Resincronización después de una caída</li>
+          <li>Bitácora de auditoría</li>
+          <li>Cifrado AES-256 para enviar biometría</li>
+        </ul>
+      </div>
+      <div class="col hard">
+        <span class="tag">Lo más difícil</span>
+        <h3>Certificación de seguridad</h3>
+        <ul>
+          <li>Reportes SAST, DAST y SCA del ambiente productivo</li>
+          <li>Cero vulnerabilidades, incluidas las de severidad baja</li>
+          <li>Pruebas en sandbox antes de pasar a producción</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Los puntos de conexión</h2>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Tú expones (los llama la PUI)</th><th>Tú consumes (los expone la PUI)</th></tr></thead>
+        <tbody>
+          <tr><td><code>/login</code></td><td><code>/login</code> · token de 1 hora</td></tr>
+          <tr><td><code>/activar-reporte</code></td><td><code>/notificar-coincidencia</code></td></tr>
+          <tr><td><code>/activar-reporte-prueba</code></td><td><code>/busqueda-finalizada</code></td></tr>
+          <tr><td><code>/desactivar-reporte</code></td><td><code>/reportes</code> · casos activos</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Esfuerzo estimado</h2>
+    <div class="gantt" role="img" aria-label="Línea de tiempo estimada de 12 semanas">
+      <div class="g-row"><span>Llave MX y e.firma</span><div class="g-track"><div class="g-bar" style="left:0;width:16.6%"></div></div></div>
+      <div class="g-row"><span>Conectar tu core y definir eventos</span><div class="g-track"><div class="g-bar" style="left:0;width:41.6%"></div></div></div>
+      <div class="g-row"><span>Infraestructura y endurecimiento</span><div class="g-track"><div class="g-bar" style="left:25%;width:33.3%"></div></div></div>
+      <div class="g-row"><span>SAST · DAST · SCA hasta cero hallazgos</span><div class="g-track"><div class="g-bar warn" style="left:50%;width:33.3%"></div></div></div>
+      <div class="g-row"><span>Sandbox y salida a producción</span><div class="g-track"><div class="g-bar" style="left:75%;width:25%"></div></div></div>
+      <div class="g-axis"><span></span><div class="g-ticks"><span>sem 0</span><span>3</span><span>6</span><span>9</span><span>12</span></div></div>
+    </div>
+    <p class="note">Es una estimación propia, no viene en el manual. Supone 1 o 2 desarrolladores y que ya existe el esqueleto del servicio. Después queda un costo recurrente: operar 24/7, monitorear y repetir los escaneos con cada cambio.</p>
+  </section>
+
+  <section>
+    <h2>Avance</h2>
+    <ul class="status">
+      <li><span class="chip ok">Hecho</span><span>Esqueleto del servicio en Python/FastAPI: los 4 endpoints, las 3 fases, una cola de envíos con reintentos, resincronización, bitácora y controles de seguridad del manual. Tiene 10 pruebas automatizadas que pasan.</span></li>
+      <li><span class="chip todo">Pendiente</span><span>Conectar el servicio a nuestro core por CURP y definir qué operaciones cuentan como evento.</span></li>
+      <li><span class="chip todo">Pendiente</span><span>Medir qué porcentaje de clientes tiene una CURP válida, porque todo el cruce depende de ella.</span></li>
+      <li><span class="chip todo">Pendiente</span><span>Legal: confirmar que aplicamos como institución diversa, la fecha límite (que viene en los Lineamientos del 27/11/2025) y el aviso de privacidad.</span></li>
+      <li><span class="chip ask">Preguntar</span><span>A RENAPO/ATDT: las URLs reales, la entrega de credenciales, cómo se deriva la llave de cifrado biométrico y en qué consiste el "firmado del JSON".</span></li>
+    </ul>
+  </section>
+
+  <footer>Basado en el Manual Técnico de la Solución Tecnológica para Instituciones Diversas, publicado en el DOF (edición vespertina) el 23 de enero de 2026. Este documento es un resumen interno y no sustituye al texto oficial.</footer>
+</div>
